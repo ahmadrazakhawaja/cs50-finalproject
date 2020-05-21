@@ -1,0 +1,81 @@
+from Crypto import Random
+from Crypto.Cipher import AES
+import os
+import hashlib
+import random
+import getpass
+class encryption:
+    def __init__(self,filepath):
+        self.filepath=filepath
+    def password(self):
+        p = getpass.getpass()
+        h= hashlib.sha256(p.encode())
+        return h.digest()
+    def encrypt(self):
+        chunk=16
+        size=os.path.getsize(self.filepath)
+        f= open(self.filepath,"r")
+        fs=open("encrypt.txt","wb")
+        iv = os.urandom(16)                                    # iv=''.join([chr(random.randint(0,0xFF)) for i in range(16)])
+        fs.write(iv)
+        en=AES.new(self.password(),AES.MODE_CBC,iv)
+        while True:
+            data=f.read(16)
+            n=len(data)
+            if n==0:   #data +=bytes(0) * (16 - n % 16)
+                break
+            elif n%16!=0:
+            #    for i in range(16 - (n % 16)):
+                data +=' '*(16-(n%16))
+            print(n)
+            out=en.encrypt(data)
+            fs.write(out)
+        f.close()
+        fs.close()
+
+    def decrypt(self,key,orisize):
+        fs=open("encrypt.txt","rb")
+        iv=fs.read(16)
+        print(len(iv))
+        h= hashlib.sha256(key.encode())
+        l=h.digest()
+        aes = AES.new(l, AES.MODE_CBC, iv)
+        f=open("original.txt","wb")
+        while(True):
+            data=fs.read(16)
+            n=len(data)
+            if n==0:
+                break
+            an=aes.decrypt(data)
+            f.write(an)
+            c=os.path.getsize("original.txt")
+            if c+16>=orisize:
+                v=orisize-c
+                data=fs.read(v)
+                an=aes.decrypt(data)
+                f.write(an)
+
+
+
+
+
+if __name__ == "__main__":
+    e1=encryption("/Users/ahmadrazakhawaja/Downloads/test.txt")
+   # e1.encrypt()
+    e1.decrypt("hello",20)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
